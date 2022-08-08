@@ -1,4 +1,5 @@
 import sys
+import time
 
 import cv2
 import numpy as np
@@ -76,6 +77,23 @@ def compare_scoreboard(video_hit,scoreboard):
             if d>hit_d:
                 hit_choose = hit
                 hit_d = d
+        hit_choose.increase_rep()
+
+        hit_choose = scoreboard[0]
+        hit_len = hit_choose.len
+        for hit in scoreboard:
+            len_ = hit.len
+            if len_ > hit_len:
+                hit_choose = hit
+                hit_len = len_
+        hit_choose.increase_rep()
+        hit_choose.increase_rep()
+        hit_choose = scoreboard[0]
+        hit_rep = hit_choose.reputation
+        for hit in scoreboard:
+            if hit_rep<hit.reputation:
+                hit_rep = hit.reputation
+                hit_choose = hit
         video_hit.add_hit(hit_choose)
         return video_hit
     elif len(scoreboard) == 1:
@@ -86,12 +104,12 @@ def compare_scoreboard(video_hit,scoreboard):
 
 def video_process(model,frame_a,frame_b,frame_c,video_hit,bullseye,innerdist,num_target,point_a,point_b):
     # 第一步，先求两个差值
-
+    start =time.time()
     point_c = pro.img_pts(model,frame_c,bullseye)
 
     diff1 = pro.img_diff(frame_a,frame_b)
     diff2 = pro.img_diff(frame_b,frame_c)
-    # pro.show_photo("diff1",diff1)
+    #pro.show_photo("diff1",diff1)
     # pro.show_photo("diff2",diff2)
 
     # 转换图像
@@ -117,7 +135,7 @@ def video_process(model,frame_a,frame_b,frame_c,video_hit,bullseye,innerdist,num
     img_quanhei = np.zeros([w, h])
 
     #pro.show_photo("line1",line1)
-    # pro.show_photo("line3",line3)
+    #pro.show_photo("line3",line3)
     # print((img_quanhei != line1).any())
     if (img_quanhei == line1).all() and (img_quanhei == line3).all():
         out1 = frame_b
@@ -149,6 +167,8 @@ def video_process(model,frame_a,frame_b,frame_c,video_hit,bullseye,innerdist,num
         hits = find_real_hit(proj_contours)
         scoreboard = create_scoreboard(hits,num_target,innerdist,model)
         video_hit = compare_scoreboard(video_hit,scoreboard)
+        end = time.time()
+        print("关键帧判别时长：{}s".format(end-start))
         return out1,out2,video_hit,point_b,point_c
 
     else:

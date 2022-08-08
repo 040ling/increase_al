@@ -128,7 +128,7 @@ class cam:
             print('读取摄像头{}/文件夹视频失败'.format(self.num))
             return 0
 
-        if i != 5:
+        if i != 15:
             return 1
 
         self.frame_c = frame

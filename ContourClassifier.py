@@ -36,6 +36,9 @@ def contour_distances_from(contour, point):
     
     return sorted(pts, key=lambda x: x[2])  # 按照第三维度（距离）从高到低排序
 
+def slope_judge(img,contour,bullseye,length):
+    print(0)
+
 def extend_contour_line(img, contour, bullseye, length):
     '''
     Extend the straight contour line owtwards the target, to try and reproduce the shape and length of the actual projectile.
@@ -68,6 +71,9 @@ def extend_contour_line(img, contour, bullseye, length):
     B = box[1]
     C = box[2]
     D = box[3]
+    list = (A,B,C,D)
+    
+
 
 
 

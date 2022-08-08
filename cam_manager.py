@@ -66,7 +66,7 @@ class CameraManager(object):
 
 
 if __name__ == "__main__":
-    model = cv2.imread("input_img/model.png")
+    model = cv2.imread("input_img/model1.jpg")
     # model = cv2.imread("model1.jpg")
     # 详细信息
     model_h,model_w,_ = model.shape
@@ -80,7 +80,7 @@ if __name__ == "__main__":
 
     num = 1  # 摄像头数目
     DisplayMode = 1  # 离线||摄像头
-    path = "input_video/jb.mp4"  # 离线视频地址
+    path = "input_video/jb_4.mp4"  # 离线视频地址
     # path = "120.avi"  # 离线视频地址
     save_path = "output"
 
