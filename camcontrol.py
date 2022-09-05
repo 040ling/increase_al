@@ -76,7 +76,7 @@ class cam:
                 print("could not open video_src " + str(self.fn) + " !\n")
                 sys.exit(1)
         else:  # 在线视频测试模式初始化 先拍正面的
-            self.fn = "rtsp://admin:Abcd12345678@192.168.1.62" + ":554/h265/ch33/main/av_stream?tcp"
+            self.fn = "rtsp://admin:Abcd12345678@192.168.1.64" + ":554/h265/ch33/main/av_stream?tcp"
             save_vid = './' + save_path + '/' + str(120 + self.num) + '.avi'
             self.cam = CamCapture(self.fn, self.num)
             print(save_vid)
@@ -102,7 +102,7 @@ class cam:
         self.point_a = pro.img_pts(model,self.frame_a,self.bullseye)
         self.point_b = pro.img_pts(model, self.frame_b, self.bullseye)
 
-    def cam_detect(self,score):
+    def cam_detect(self,score,set_num):
         ret, frame = self.cam.read()
 
         if not ret:
@@ -115,12 +115,12 @@ class cam:
         #self.frame_a,self.frame_b=shipin.chulishipin(self.model,self.frame_a,self.frame_b,self.frame_c)
         self.frame_a,self.frame_b,self.video_hit,self.point_a,self.point_b=ts.video_process(self.model,self.frame_a,self.frame_b,self.frame_c,self.video_hit,
                                                                   self.bullseye,self.innerdist,self.num_target,self.point_a,self.point_b)
-        if self.video_hit.get_num == 3:
+        if self.video_hit.get_num() == set_num:
             self.video_hit.final_pre(score)
-            self.video_hit = va.VideoHits  # 重新初始化
+            self.video_hit = va.VideoHits()  # 重新初始化
 
 
-    def video_detect(self,i,score):
+    def video_detect(self,i,score,set_num):
         ret, frame = self.cam.read()
 
         if not ret:
@@ -128,7 +128,7 @@ class cam:
             print('读取摄像头{}/文件夹视频失败'.format(self.num))
             return 0
 
-        if i != 15:
+        if i != 5:
             return 1
 
         self.frame_c = frame
@@ -136,7 +136,7 @@ class cam:
         self.frame_a,self.frame_b,self.video_hit,self.point_a,self.point_b=ts.video_process(self.model,self.frame_a,self.frame_b,self.frame_c,self.video_hit,
                                                                   self.bullseye,self.innerdist,self.num_target,self.point_a,self.point_b)
 
-        if self.video_hit.get_num() == 3:
+        if self.video_hit.get_num() == set_num:
             self.video_hit.final_pre(score)
             self.video_hit=va.VideoHits()  # 重新初始化
 

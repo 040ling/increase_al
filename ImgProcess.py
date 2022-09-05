@@ -185,12 +185,19 @@ def img_transform(img,model,pts1,pts2):
 
 
 def img_line(img):
-    lines = cv2.HoughLinesP(img, 2, np.pi / 180, 120, minLineLength=80, maxLineGap=30)
+    lines = cv2.HoughLinesP(img, 2, np.pi / 180, 120, minLineLength=80, maxLineGap=0)
+    img_line_ = np.zeros(img.shape, dtype=img.dtype)
+    if type(lines) != type(None):
+        for line in lines:
+            for x1, y1, x2, y2 in line:
+                cv2.line(img_line_, (x1, y1), (x2, y2), (0xff, 0xff, 0xff), 5)
+    lines = cv2.HoughLinesP(img_line_, 2, np.pi / 180, 120, minLineLength=80, maxLineGap=30)
     img_line = np.zeros(img.shape, dtype=img.dtype)
     if type(lines) != type(None):
         for line in lines:
             for x1, y1, x2, y2 in line:
                 cv2.line(img_line, (x1, y1), (x2, y2), (0xff, 0xff, 0xff), 5)
+
     # show_photo("img_line",img_line)
     return img_line
 

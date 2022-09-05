@@ -143,6 +143,7 @@ def reproduce_proj_contours(img, distances, bullseye, radius,model):
     
     # clear unnecessary noise
     blank_img[distances[1] > radius] = 0
+    ImgProcess.show_photo("bimg",blank_img)
 
 
     # detect contours again, after the extension

@@ -8,6 +8,8 @@ import Geometry2D as geo2D
 import VisualAnalyzer as visuals
 import ContourClassifier as cntr
 import VideoAnalyze as va
+import tool
+
 
 class Hit:
     def __init__(self,x,y,d,score,len,bullseye):
@@ -99,6 +101,9 @@ def compare_scoreboard(video_hit,scoreboard):
     elif len(scoreboard) == 1:
         video_hit.add_hit(scoreboard[0])
         return video_hit
+    else:
+        tool.PRINT("未检测出箭头")
+        return video_hit
 
 
 
@@ -106,31 +111,36 @@ def video_process(model,frame_a,frame_b,frame_c,video_hit,bullseye,innerdist,num
     # 第一步，先求两个差值
     start =time.time()
     point_c = pro.img_pts(model,frame_c,bullseye)
+    print(point_c)
+
 
     diff1 = pro.img_diff(frame_a,frame_b)
     diff2 = pro.img_diff(frame_b,frame_c)
-    #pro.show_photo("diff1",diff1)
+    # pro.show_photo("diff1",diff1)
     # pro.show_photo("diff2",diff2)
 
     # 转换图像
     model_w,model_h,_ = model.shape
     pts1 = pro.get_mean_points(point_a,point_b)
     pts2 = pro.get_mean_points(point_b,point_c)
+
     pts = np.float32([[0, 0], [0, model_w - 2], [model_h - 2, model_w - 2], [model_h - 2, 0]])
 
 
     if len(pts1)==4 and len(pts2)==4:
         img1 = pro.img_transform(diff1, model, pts1, pts)
         img2 = pro.img_transform(diff2, model, pts1, pts)
+        # pc = pro.img_transform(frame_c,model,point_c,pts)
+        # pro.show_photo("pc",pc)
     else:
         print("error:cant find the right points")
         sys.exit(1)
 
     distances = geo2D.calc_distances_from(model.shape, bullseye)
-    line1, radius = pro.img_processing(img1, 350, distances)
-    line1 = pro.img_line(line1)
+    line3, radius = pro.img_processing(img1, 350, distances)
+    line1 = pro.img_line(line3)
     line2, _ = pro.img_processing(img2, 350, distances)
-    line3, _ = pro.img_processing(img1, 350, distances)
+
     w,h,_ = model.shape
     img_quanhei = np.zeros([w, h])
 
@@ -156,6 +166,8 @@ def video_process(model,frame_a,frame_b,frame_c,video_hit,bullseye,innerdist,num
         out1 = frame_b
         out2 = frame_c
         print(3)
+        pro.show_photo("line1",line1)
+        pro.show_photo("line3",line3)
         proj_contours = visuals.reproduce_proj_contours(line1, distances,
                                                         bullseye, radius,model)  # 边缘检测
         model_ = model.copy()

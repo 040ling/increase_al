@@ -183,5 +183,8 @@ def filter_convex_contours(contours):
         # if it's inside it, the contour is relatively straight
         if is_contour_rect(cont, point_A, point_B, 5):
             filtered.append(cont)
+        print(point_A)
+        print(point_B)
+        print("end")
 
     return filtered
