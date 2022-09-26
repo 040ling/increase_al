@@ -66,8 +66,8 @@ class CameraManager(object):
 
 
 if __name__ == "__main__":
-    model = cv2.imread("input_img/model.png")
-    # model = cv2.imread("input_img/model1.jpg")
+    # model = cv2.imread("input_img/model.png")
+    model = cv2.imread("input_img/model1.jpg")
     # 详细信息
     model_h,model_w,_ = model.shape
     #point_x = int(model_h/2)
@@ -80,29 +80,10 @@ if __name__ == "__main__":
 
     num = 1  # 摄像头数目
     DisplayMode = 1  # 离线||摄像头
-    path = "input_video/jb1.mp4"  # 离线视频地址
+    path = "input_video/9.mp4"  # 离线视频地址
     # path = "120.avi"  # 离线视频地址
     save_path = "output"
 
     #video = cv2.VideoCapture(0)
     camera = CameraManager(DisplayMode)
-    camera.start(0,DisplayMode,path,save_path,model,bullseye,innerdist,num_target,20,3)
-    """
-    while True:
-        frame = camera.getFrame()
-        if frame is not None:
-            cv2.imshow("test", frame)
-            k = cv2.waitKey(1) & 0xff
-            if k == 27:
-                camera.stop()
-                break
-            elif k == 9:
-                # tab键开启录像
-                if not camera.isWritingVideo():
-                    camera.startWritingVideo()
-                else:
-                    camera.stopWritingVideo()
-            elif k == 32:
-                # 空格键截图
-                camera.writeImage()
-    """
+    camera.start(0,DisplayMode,path,save_path,model,bullseye,innerdist,num_target,20,1)
