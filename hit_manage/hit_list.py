@@ -21,10 +21,10 @@ class VideoHits:
                 dmin = d
         return dmin
 
-    def add_hit(self,hit):
+    def add_hit(self,hit,client):
         str = "本次命中环数：{}环".format(hit.score)
         PRINT(str)
-        time.sleep(0.5)
+
         self.hits_list.append(hit)
 
     def final_pre(self,score):

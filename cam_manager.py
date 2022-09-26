@@ -6,6 +6,31 @@ import threading
 import time
 import camcontrol as CAM
 import cv2
+import json
+import sys
+import os
+import paho.mqtt.client as mqtt
+
+def on_connect(client,userdata,flags,rc):
+    print("连接成功")
+
+    client.subscribe("test")
+
+def on_message(client,userdata,msg):
+    payload = json.loads(msg.payload.decode())
+    print("收到比赛ID："+payload.get("taskId"))
+    tid = payload.get("taskId")
+
+    if len(tid)>0:
+        if int(tid[0])!=6:
+            camera = CameraManager(DisplayMode)
+            camera.start(0, DisplayMode, path, save_path, model, bullseye, innerdist, num_target, 20, 1,tid,client)
+        else:
+            camera = CameraManager(DisplayMode)
+            camera.start(0, DisplayMode, path, save_path, model, bullseye, innerdist, num_target, 20, 1,tid,client)
+
+
+
 
 class CameraManager(object):
     def __init__(self, DisplayMode):
@@ -23,20 +48,20 @@ class CameraManager(object):
 
         tool.PRINT("视频采集器初始化完毕!")
 
-    def start(self,idx,DisplayMode,path,save_path,model,bullseye,innerdist,num_target,score,set_num):
+    def start(self,idx,DisplayMode,path,save_path,model,bullseye,innerdist,num_target,score,set_num,taskID,client):
         # 开始工作
         tool.PRINT("开启视频采集")
         if self.DisplayMode:
             cam = CAM.cam(idx, DisplayMode, path, save_path, model,bullseye,innerdist,num_target)
-            frameThread = threading.Thread(target=self.worker2, args=(cam,score,set_num))
+            frameThread = threading.Thread(target=self.worker2, args=(cam,score,set_num,taskID,client))
             frameThread.start()
         else:
             cam = CAM.cam(idx, DisplayMode, path, save_path, model, bullseye, innerdist, num_target)
-            frameThread = threading.Thread(target=self.worker, args=(cam,score,set_num))
+            frameThread = threading.Thread(target=self.worker, args=(cam,score,set_num,taskID,client))
             frameThread.start()
         return self
 
-    def worker(self, ele, score,set_num):
+    def worker(self, ele, score,set_num,taskID,client):
         print('3214')
         while self._isWorking:
             start = time.time()
@@ -45,7 +70,7 @@ class CameraManager(object):
             while time.time() - start < 0.08:
                 time.sleep(0.001)
 
-    def worker2(self, ele, score,set_num):
+    def worker2(self, ele, score,set_num,taskID,client):
         print('12374')
         idx = 0
         while self._isWorking:
@@ -55,10 +80,11 @@ class CameraManager(object):
                 idx = 0
             else:
                 idx += 1
-            normal = ele.video_detect(idx, score,set_num)
+            normal = ele.video_detect(idx, score,set_num,taskID,client)
 
             if not normal:
                 tool.PRINT("识别完成")
+                self._isWorking = 0
                 break
             while time.time() - start < 0.08:
                 time.sleep(0.001)
@@ -84,9 +110,23 @@ if __name__ == "__main__":
     # path = "120.avi"  # 离线视频地址
     save_path = "output"
 
+    TASK_TOPIC = 'test'
+    client_id = time.strftime('%Y%m%d%H%M%S', time.localtime(time.time()))
+
+    client = mqtt.Client(client_id, transport='tcp')
+    client.connect("127.0.0.1", 1883)
+
+    client.on_connect = on_connect
+    client.on_message = on_message
+
+    client.loop_forever()
+    # while True:
+      #  continue
+
     #video = cv2.VideoCapture(0)
-    camera = CameraManager(DisplayMode)
-    camera.start(0,DisplayMode,path,save_path,model,bullseye,innerdist,num_target,20,3)
+    #camera = CameraManager(DisplayMode)
+    #camera.start(0,DisplayMode,path,save_path,model,bullseye,innerdist,num_target,20,1)
+
     """
     while True:
         frame = camera.getFrame()

@@ -81,7 +81,7 @@ class cam:
             self.cam = CamCapture(self.fn, self.num)
             print(save_vid)
             self.vidWriter = cv2.VideoWriter(save_vid, cv2.VideoWriter_fourcc('M', 'P', '4', '2'), 12.0,
-                                             (640, 360))  # 服务器在线视频保存路径
+                                             (1920, 1080))  # 服务器在线视频保存路径
         #print(self.fn)  # 读取文件的路径
         ret, prev = self.cam.read()  # 从摄像头读来的帧
         self.model = model
@@ -102,7 +102,7 @@ class cam:
         self.point_a = pro.img_pts(model,self.frame_a,self.bullseye)
         self.point_b = pro.img_pts(model, self.frame_b, self.bullseye)
 
-    def cam_detect(self,score,set_num):
+    def cam_detect(self,score,set_num,taskID,client):
         ret, frame = self.cam.read()
 
         if not ret:
@@ -114,13 +114,14 @@ class cam:
         self.frame_c = frame
         #self.frame_a,self.frame_b=shipin.chulishipin(self.model,self.frame_a,self.frame_b,self.frame_c)
         self.frame_a,self.frame_b,self.video_hit,self.point_a,self.point_b=ts.video_process(self.model,self.frame_a,self.frame_b,self.frame_c,self.video_hit,
-                                                                  self.bullseye,self.innerdist,self.num_target,self.point_a,self.point_b)
+                                                                  self.bullseye,self.innerdist,self.num_target,self.point_a,self.point_b,taskID,client)
         if self.video_hit.get_num() == set_num:
             self.video_hit.final_pre(score)
             self.video_hit = va.VideoHits()  # 重新初始化
+            return 0
 
 
-    def video_detect(self,i,score,set_num):
+    def video_detect(self,i,score,set_num,taskID,client):
         ret, frame = self.cam.read()
 
         if not ret:
@@ -134,11 +135,12 @@ class cam:
         self.frame_c = frame
         #self.frame_a,self.frame_b=shipin.chulishipin(self.model,self.frame_a,self.frame_b,self.frame_c)
         self.frame_a,self.frame_b,self.video_hit,self.point_a,self.point_b=ts.video_process(self.model,self.frame_a,self.frame_b,self.frame_c,self.video_hit,
-                                                                  self.bullseye,self.innerdist,self.num_target,self.point_a,self.point_b)
+                                                                  self.bullseye,self.innerdist,self.num_target,self.point_a,self.point_b,taskID,client)
 
         if self.video_hit.get_num() == set_num:
             self.video_hit.final_pre(score)
             self.video_hit=va.VideoHits()  # 重新初始化
+            return 0
 
         return 1
 
