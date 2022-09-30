@@ -138,12 +138,22 @@ def is_contour_rect(contour, A, B, samples):
     y_step = y_distance / samples
 
     # contour is a very small square
-    if (x_step == 0 or y_step == 0):
+    if (x_step == 0 and y_step == 0):
         return False
-
-    x_vals = np.arange(A[0], B[0], x_step)
-    y_vals = np.arange(A[1], B[1], y_step)
-    points = [(x,y) for x, y in zip(x_vals, y_vals)]
+    elif (x_step == 0 and y_step!=0):
+        x_vals = np.ones(int(y_step))
+        x_vals =x_vals * A[0]
+        y_vals = np.arange(A[1], B[1], y_step)
+        points = [(x, y) for x, y in zip(x_vals, y_vals)]
+    elif(x_step != 0 and y_step==0):
+        y_vals = np.ones(int(x_step))
+        y_vals = y_vals * A[1]
+        x_vals = np.arange(A[0], B[0], x_step)
+        points = [(x, y) for x, y in zip(x_vals, y_vals)]
+    else:
+        x_vals = np.arange(A[0], B[0], x_step)
+        y_vals = np.arange(A[1], B[1], y_step)
+        points = [(x,y) for x, y in zip(x_vals, y_vals)]
 
     for p in points:
         # check if point is outside the contour
@@ -183,6 +193,7 @@ def filter_convex_contours(contours):
         # if it's inside it, the contour is relatively straight
         if is_contour_rect(cont, point_A, point_B, 5):
             filtered.append(cont)
+
         print(point_A)
         print(point_B)
         print("end")

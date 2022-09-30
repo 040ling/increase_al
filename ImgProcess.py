@@ -185,13 +185,13 @@ def img_transform(img,model,pts1,pts2):
 
 
 def img_line(img):
-    lines = cv2.HoughLinesP(img, 2, np.pi / 180, 120, minLineLength=80, maxLineGap=0)
+    lines = cv2.HoughLinesP(img, 2, np.pi / 180, 120, minLineLength=30, maxLineGap=0)
     img_line_ = np.zeros(img.shape, dtype=img.dtype)
     if type(lines) != type(None):
         for line in lines:
             for x1, y1, x2, y2 in line:
                 cv2.line(img_line_, (x1, y1), (x2, y2), (0xff, 0xff, 0xff), 5)
-    lines = cv2.HoughLinesP(img_line_, 2, np.pi / 180, 120, minLineLength=80, maxLineGap=30)
+    lines = cv2.HoughLinesP(img_line_, 2, np.pi / 180, 120, minLineLength=30, maxLineGap=30)
     img_line = np.zeros(img.shape, dtype=img.dtype)
     if type(lines) != type(None):
         for line in lines:
@@ -218,6 +218,6 @@ def img_processing(img,estimatedRadius,distances):
     # 二值化
     _, img_b = cv2.threshold(img, 20, 0xff, cv2.THRESH_BINARY)
 
-    img_b = cv2.morphologyEx(img_b, cv2.MORPH_OPEN, np.ones((3, 3), np.uint8))
+    img_b = cv2.morphologyEx(img_b, cv2.MORPH_OPEN, np.ones((2, 2), np.uint8))
 
     return img_b,radius

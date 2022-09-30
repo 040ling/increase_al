@@ -97,7 +97,7 @@ def compare_scoreboard(video_hit,scoreboard):
                 hit_choose = hit
                 hit_d = d
         hit_choose.increase_rep()
-
+        # 算和已知点的距离
         hit_choose = scoreboard[0]
         hit_len = hit_choose.len
         for hit in scoreboard:
@@ -107,6 +107,17 @@ def compare_scoreboard(video_hit,scoreboard):
                 hit_len = len_
         hit_choose.increase_rep()
         hit_choose.increase_rep()
+        # 最长的信任度高
+        hit_choose = scoreboard[0]
+        hit_score = hit_choose.score
+        for hit in scoreboard:
+            score_ = hit.score
+            if score_ < 4:
+                hit.descrease_rep()
+                hit.descrease_rep()
+                hit.descrease_rep()
+        # 越靠近外环的信任度低
+
         hit_choose = scoreboard[0]
         hit_rep = hit_choose.reputation
         for hit in scoreboard:

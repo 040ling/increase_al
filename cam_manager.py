@@ -66,27 +66,27 @@ class CameraManager(object):
 
 
 if __name__ == "__main__":
-    model = cv2.imread("input_img/model.png")
-    # model = cv2.imread("input_img/model1.jpg")
+    # model = cv2.imread("input_img/model.png")
+    model = cv2.imread("input_img/model1.jpg")
     # 详细信息
     model_h,model_w,_ = model.shape
     #point_x = int(model_h/2)
     #point_y = int(model_w/2)
     #bullseye = (point_x,point_y)
-    bullseye = (372, 395)  # 靶心坐标
+    bullseye = (366, 385)  # 靶心坐标
     innerdist = 35  # 环内径
     num_target = 10  # 环数
 
 
     num = 1  # 摄像头数目
     DisplayMode = 1  # 离线||摄像头
-    path = "input_video/jb1.mp4"  # 离线视频地址
+    path = "input_video/9_2.mp4"  # 离线视频地址
     # path = "120.avi"  # 离线视频地址
     save_path = "output"
 
     #video = cv2.VideoCapture(0)
     camera = CameraManager(DisplayMode)
-    camera.start(0,DisplayMode,path,save_path,model,bullseye,innerdist,num_target,20,3)
+    camera.start(1,DisplayMode,path,save_path,model,bullseye,innerdist,num_target,20,3)
     """
     while True:
         frame = camera.getFrame()
