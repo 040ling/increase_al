@@ -76,12 +76,12 @@ class cam:
                 print("could not open video_src " + str(self.fn) + " !\n")
                 sys.exit(1)
         else:  # 在线视频测试模式初始化 先拍正面的
-            self.fn = "rtsp://admin:Abcd12345678@192.168.1.64" + ":554/h265/ch33/main/av_stream?tcp"
+            self.fn = "rtsp://admin:Abcd12345678@192.168.1.62" + ":554/h265/ch33/main/av_stream?tcp"
             save_vid = './' + save_path + '/' + str(120 + self.num) + '.avi'
             self.cam = CamCapture(self.fn, self.num)
             print(save_vid)
             self.vidWriter = cv2.VideoWriter(save_vid, cv2.VideoWriter_fourcc('M', 'P', '4', '2'), 12.0,
-                                             (640, 360))  # 服务器在线视频保存路径
+                                             (1920, 1080))  # 服务器在线视频保存路径
         #print(self.fn)  # 读取文件的路径
         ret, prev = self.cam.read()  # 从摄像头读来的帧
         self.model = model
@@ -102,7 +102,7 @@ class cam:
         self.point_a = pro.img_pts(model,self.frame_a,self.bullseye)
         self.point_b = pro.img_pts(model, self.frame_b, self.bullseye)
 
-    def cam_detect(self,score,set_num):
+    def cam_detect(self):
         ret, frame = self.cam.read()
 
         if not ret:
@@ -115,32 +115,37 @@ class cam:
         #self.frame_a,self.frame_b=shipin.chulishipin(self.model,self.frame_a,self.frame_b,self.frame_c)
         self.frame_a,self.frame_b,self.video_hit,self.point_a,self.point_b=ts.video_process(self.model,self.frame_a,self.frame_b,self.frame_c,self.video_hit,
                                                                   self.bullseye,self.innerdist,self.num_target,self.point_a,self.point_b)
-        if self.video_hit.get_num() == set_num:
-            self.video_hit.final_pre(score)
-            self.video_hit = va.VideoHits()  # 重新初始化
+
+            #self.video_hit = va.VideoHits  # 重新初始化
 
 
-    def video_detect(self,i,score,set_num):
+    def video_detect(self,i,t1):
         ret, frame = self.cam.read()
 
         if not ret:
             self.cam_work = 0
             print('读取摄像头{}/文件夹视频失败'.format(self.num))
-            return 0
+            return 0,t1
 
-        if i != 5:
-            return 1
+        if i != 15:
+            return 1,t1
+
+        arch_num = self.video_hit.get_num()
 
         self.frame_c = frame
         #self.frame_a,self.frame_b=shipin.chulishipin(self.model,self.frame_a,self.frame_b,self.frame_c)
         self.frame_a,self.frame_b,self.video_hit,self.point_a,self.point_b=ts.video_process(self.model,self.frame_a,self.frame_b,self.frame_c,self.video_hit,
-                                                                  self.bullseye,self.innerdist,self.num_target,self.point_a,self.point_b)
+                                                                  self.bullseye,self.innerdist,self.num_target,self.point_a,self.point_b,t1)
 
-        if self.video_hit.get_num() == set_num:
-            self.video_hit.final_pre(score)
-            self.video_hit=va.VideoHits()  # 重新初始化
+        arch_num_hou = self.video_hit.get_num()
+        if arch_num_hou-arch_num!=0:
+            t1 = time.time()
 
-        return 1
+
+
+            #self.video_hit=va.VideoHits()  # 重新初始化
+
+        return 1,t1
 
 
 

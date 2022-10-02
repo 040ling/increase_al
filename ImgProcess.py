@@ -58,6 +58,25 @@ def img_diff(img1, img2):
     diff = cv2.absdiff(gray1, gray2)
     return diff
 
+def color_line(img):
+    gray = img_preprocessing(img)
+    edges = cv2.Canny(gray, 50, 100)
+
+    minLineLength = 50
+    maxLineGap = 30
+    lines = cv2.HoughLinesP(edges, 1, np.pi / 180, 100, minLineLength, maxLineGap)
+
+    for line in lines:
+        for x1, y1, x2, y2 in line:
+            cv2.line(img, (x1, y1), (x2, y2), (0, 255, 0), 2)
+
+    cv2.imshow("edges", edges)
+    cv2.imshow("lines", img)
+    cv2.waitKey()
+    cv2.destroyAllWindows()
+
+
+
 
 def jiaozheng():
     return 0
@@ -185,19 +204,19 @@ def img_transform(img,model,pts1,pts2):
 
 
 def img_line(img):
-    lines = cv2.HoughLinesP(img, 2, np.pi / 180, 120, minLineLength=30, maxLineGap=0)
+    lines = cv2.HoughLinesP(img, 2, np.pi / 180, 120, minLineLength=80, maxLineGap=0)
     img_line_ = np.zeros(img.shape, dtype=img.dtype)
     if type(lines) != type(None):
         for line in lines:
             for x1, y1, x2, y2 in line:
                 cv2.line(img_line_, (x1, y1), (x2, y2), (0xff, 0xff, 0xff), 5)
-    lines = cv2.HoughLinesP(img_line_, 2, np.pi / 180, 120, minLineLength=30, maxLineGap=30)
+
+    lines = cv2.HoughLinesP(img_line_, 2, np.pi / 180, 120, minLineLength=80, maxLineGap=30)
     img_line = np.zeros(img.shape, dtype=img.dtype)
     if type(lines) != type(None):
         for line in lines:
             for x1, y1, x2, y2 in line:
                 cv2.line(img_line, (x1, y1), (x2, y2), (0xff, 0xff, 0xff), 5)
-
     # show_photo("img_line",img_line)
     return img_line
 
@@ -218,6 +237,31 @@ def img_processing(img,estimatedRadius,distances):
     # 二值化
     _, img_b = cv2.threshold(img, 20, 0xff, cv2.THRESH_BINARY)
 
-    img_b = cv2.morphologyEx(img_b, cv2.MORPH_OPEN, np.ones((2, 2), np.uint8))
+    img_b = cv2.morphologyEx(img_b, cv2.MORPH_OPEN, np.ones((3, 3), np.uint8))
 
     return img_b,radius
+
+def img_end(img,estimatedRadius,distances):
+    radius = estimatedRadius
+    img[distances[1] > radius] = 0
+
+    # 二值化
+    _, img_b = cv2.threshold(img, 20, 0xff, cv2.THRESH_BINARY)
+
+    img_b = cv2.morphologyEx(img_b, cv2.MORPH_OPEN, np.ones((2, 2), np.uint8))
+
+    lines = cv2.HoughLinesP(img_b, 2, np.pi / 180, 120, minLineLength=30, maxLineGap=0)
+    img_line_ = np.zeros(img_b.shape, dtype=img_b.dtype)
+    if type(lines) != type(None):
+        for line in lines:
+            for x1, y1, x2, y2 in line:
+                cv2.line(img_line_, (x1, y1), (x2, y2), (0xff, 0xff, 0xff), 5)
+
+    lines = cv2.HoughLinesP(img_line_, 2, np.pi / 180, 120, minLineLength=30, maxLineGap=30)
+    img_line = np.zeros(img_b.shape, dtype=img_b.dtype)
+    if type(lines) != type(None):
+        for line in lines:
+            for x1, y1, x2, y2 in line:
+                cv2.line(img_line, (x1, y1), (x2, y2), (0xff, 0xff, 0xff), 5)
+    # show_photo("img_line",img_line)
+    return img_line,radius

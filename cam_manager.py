@@ -8,7 +8,7 @@ import camcontrol as CAM
 import cv2
 
 class CameraManager(object):
-    def __init__(self, DisplayMode):
+    def __init__(self, DisplayMode,cam_num=1):
         '''
         :param capture: 摄像头对象
         :param windowManager: 钩子类,窗口管理,按键
@@ -20,42 +20,61 @@ class CameraManager(object):
         # 是否工作
         self._isWorking = True
         self.DisplayMode = DisplayMode
+        self.cam_num = cam_num
+        self.cam_list = [None]*self.cam_num
+        self.framethread = [None]*cam_num
 
         tool.PRINT("视频采集器初始化完毕!")
 
-    def start(self,idx,DisplayMode,path,save_path,model,bullseye,innerdist,num_target,score,set_num):
+    def start_init(self,idx,DisplayMode,path,save_path,model,bullseye,innerdist,num_target):
         # 开始工作
         tool.PRINT("开启视频采集")
         if self.DisplayMode:
-            cam = CAM.cam(idx, DisplayMode, path, save_path, model,bullseye,innerdist,num_target)
-            frameThread = threading.Thread(target=self.worker2, args=(cam,score,set_num))
-            frameThread.start()
+            start = time.time()
+            for idx in range(self.cam_num):
+                self.cam_list[idx] = CAM.cam(idx, DisplayMode, path, save_path, model, bullseye, innerdist, num_target)
+
         else:
-            cam = CAM.cam(idx, DisplayMode, path, save_path, model, bullseye, innerdist, num_target)
-            frameThread = threading.Thread(target=self.worker, args=(cam,score,set_num))
-            frameThread.start()
+            for idx in range(self.cam_num):
+                self.cam_list[idx] = CAM.cam(idx, DisplayMode, path, save_path, model, bullseye, innerdist, num_target)
         return self
 
-    def worker(self, ele, score,set_num):
+    def start(self):
+        if self.DisplayMode:
+            for idx in range(self.cam_num):
+                framethread = threading.Thread(target=self.worker2, args=(self.cam_list[idx],idx))
+                self.framethread[idx] = framethread
+        else:
+            for idx in range(self.cam_num):
+                framethread = threading.Thread(target=self.worker, args=(self.cam_list[idx],idx))
+                self.framethread[idx] = framethread
+        for idx in range(self.cam_num):
+            self.framethread[idx].start()
+
+
+
+
+    def worker(self, ele,i):
         print('3214')
         while self._isWorking:
             start = time.time()
             # try:
-            ele.cam_detect(score,set_num)
+            ele.cam_detect()
             while time.time() - start < 0.08:
                 time.sleep(0.001)
 
-    def worker2(self, ele, score,set_num):
+    def worker2(self, ele,i):
         print('12374')
         idx = 0
+        t1 = time.time()
         while self._isWorking:
             start = time.time()
             # try:
-            if idx == 5:
+            if idx == 15:
                 idx = 0
             else:
                 idx += 1
-            normal = ele.video_detect(idx, score,set_num)
+            normal,t1 = ele.video_detect(idx,t1)
 
             if not normal:
                 tool.PRINT("识别完成")
@@ -66,14 +85,14 @@ class CameraManager(object):
 
 
 if __name__ == "__main__":
-    # model = cv2.imread("input_img/model.png")
-    model = cv2.imread("input_img/model1.jpg")
+    model = cv2.imread("input_video/model1.jpg")
+    # model = cv2.imread("model1.jpg")
     # 详细信息
     model_h,model_w,_ = model.shape
     #point_x = int(model_h/2)
     #point_y = int(model_w/2)
     #bullseye = (point_x,point_y)
-    bullseye = (366, 385)  # 靶心坐标
+    bullseye = (378, 386)  # 靶心坐标
     innerdist = 35  # 环内径
     num_target = 10  # 环数
 
@@ -86,7 +105,8 @@ if __name__ == "__main__":
 
     #video = cv2.VideoCapture(0)
     camera = CameraManager(DisplayMode)
-    camera.start(1,DisplayMode,path,save_path,model,bullseye,innerdist,num_target,20,3)
+    camera.start_init(0,DisplayMode,path,save_path,model,bullseye,innerdist,num_target)
+    camera.start()
     """
     while True:
         frame = camera.getFrame()

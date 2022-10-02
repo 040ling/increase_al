@@ -40,6 +40,11 @@ class VideoHits:
                 dmin = d
         return dmin
 
+    def hit_print(self):
+        for hit in self.hits_list:
+            hit_ = [hit.point,hit.score]
+            print(hit_)
+
     def add_hit(self,hit):
         str = "本次命中环数：{}环".format(hit.score)
         PRINT(str)

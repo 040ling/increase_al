@@ -132,8 +132,9 @@ def reproduce_proj_contours(img, distances, bullseye, radius,model):
     # detect the unconvex contours (true projectile contours)
 
     contours = cv2.findContours(img, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)[-2:]  # 轮廓检测
+    img_copy = img.copy()
 
-    rect_contours = cntr.filter_convex_contours(contours[0])
+    rect_contours = cntr.filter_convex_contours(img_copy,contours[0])
 
     blank_img = np.zeros(img.shape, dtype=img.dtype)
     
@@ -143,7 +144,6 @@ def reproduce_proj_contours(img, distances, bullseye, radius,model):
     
     # clear unnecessary noise
     blank_img[distances[1] > radius] = 0
-    ImgProcess.show_photo("bimg",blank_img)
 
 
     # detect contours again, after the extension
