@@ -8,6 +8,7 @@ import Geometry2D as geo2D
 import VisualAnalyzer as visuals
 import ContourClassifier as cntr
 import VideoAnalyze as va
+import tool
 
 class Hit:
     def __init__(self,x,y,d,score,len,bullseye):
@@ -78,7 +79,7 @@ def compare_scoreboard(video_hit,scoreboard):
                 hit_choose = hit
                 hit_d = d
         hit_choose.increase_rep()
-
+        # 算和已知点的距离
         hit_choose = scoreboard[0]
         hit_len = hit_choose.len
         for hit in scoreboard:
@@ -88,6 +89,17 @@ def compare_scoreboard(video_hit,scoreboard):
                 hit_len = len_
         hit_choose.increase_rep()
         hit_choose.increase_rep()
+        # 最长的信任度高
+        hit_choose = scoreboard[0]
+        hit_score = hit_choose.score
+        for hit in scoreboard:
+            score_ = hit.score
+            if score_ < 4:
+                hit.descrease_rep()
+                hit.descrease_rep()
+                hit.descrease_rep()
+        # 越靠近外环的信任度低
+
         hit_choose = scoreboard[0]
         hit_rep = hit_choose.reputation
         for hit in scoreboard:
@@ -98,6 +110,9 @@ def compare_scoreboard(video_hit,scoreboard):
         return video_hit
     elif len(scoreboard) == 1:
         video_hit.add_hit(scoreboard[0])
+        return video_hit
+    else:
+        tool.PRINT("未检测出箭头")
         return video_hit
 
 
@@ -127,10 +142,10 @@ def video_process(model,frame_a,frame_b,frame_c,video_hit,bullseye,innerdist,num
         sys.exit(1)
 
     distances = geo2D.calc_distances_from(model.shape, bullseye)
-    line1, radius = pro.img_processing(img1, 350, distances)
-    line1 = pro.img_line(line1)
+    line3, radius = pro.img_processing(img1, 350, distances)
+    line1 = pro.img_line(line3)
     line2, _ = pro.img_processing(img2, 350, distances)
-    line3, _ = pro.img_processing(img1, 350, distances)
+
     w,h,_ = model.shape
     img_quanhei = np.zeros([w, h])
 

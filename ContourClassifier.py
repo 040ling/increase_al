@@ -1,6 +1,7 @@
 import Geometry2D as geo2D
 import numpy as np
 import cv2
+import ImgProcess as pro
 
 def contour_distances_from(contour, point):
     '''
@@ -140,12 +141,12 @@ def is_contour_rect(contour, A, B, samples):
     # contour is a very small square
     if (x_step == 0 and y_step == 0):
         return False
-    elif (x_step == 0 and y_step!=0):
+    elif (x_step == 0 and y_step != 0):
         x_vals = np.ones(int(y_step))
-        x_vals =x_vals * A[0]
+        x_vals = x_vals * A[0]
         y_vals = np.arange(A[1], B[1], y_step)
         points = [(x, y) for x, y in zip(x_vals, y_vals)]
-    elif(x_step != 0 and y_step==0):
+    elif (x_step != 0 and y_step == 0):
         y_vals = np.ones(int(x_step))
         y_vals = y_vals * A[1]
         x_vals = np.arange(A[0], B[0], x_step)
@@ -153,7 +154,7 @@ def is_contour_rect(contour, A, B, samples):
     else:
         x_vals = np.arange(A[0], B[0], x_step)
         y_vals = np.arange(A[1], B[1], y_step)
-        points = [(x,y) for x, y in zip(x_vals, y_vals)]
+        points = [(x, y) for x, y in zip(x_vals, y_vals)]
 
     for p in points:
         # check if point is outside the contour
@@ -162,7 +163,7 @@ def is_contour_rect(contour, A, B, samples):
 
     return True
 
-def filter_convex_contours(contours):
+def filter_convex_contours(img,contours):
     '''
     Take a list of contours and filter out all the contours with a convex shape.
 
@@ -193,8 +194,54 @@ def filter_convex_contours(contours):
         # if it's inside it, the contour is relatively straight
         if is_contour_rect(cont, point_A, point_B, 5):
             filtered.append(cont)
-        print(point_A)
-        print(point_B)
-        print("end")
+        else:
+            corners = cv2.goodFeaturesToTrack(img, 3, 0.1, 10)
+            corners = np.int0(corners)
+            list = []
+            for i in corners:
+                x, y = i.ravel()
+                point = (x, y)
+                list.append(point)
+            cv2.imshow("img", img)
+            point, top = cac_cont_point(list[0], list[1], list[2], cont)
+            bimg = np.zeros(img.shape, dtype=img.dtype)
+            cv2.line(bimg, point, top, (0xff, 0x0, 0xff), 4)
+
+            cs = cv2.findContours(bimg, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)[-2:]
+            c = cs[0]
+            for i in c:
+                filtered.append(i)
+
+            pro.show_photo("linenew", bimg)
 
     return filtered
+
+def cac_cont_point(a,b,c,cont):
+    ab = ((a[0] + b[0]) / 2, (a[1] + b[1]) / 2)
+    ac = ((a[0] + c[0]) / 2, (a[1] + c[1]) / 2)
+    bc = ((c[0] + b[0]) / 2, (c[1] + b[1]) / 2)
+
+    ab_line = cv2.pointPolygonTest(cont, ab, True)
+    bc_line = cv2.pointPolygonTest(cont, bc, True)
+    ac_line = cv2.pointPolygonTest(cont, ac, True)
+
+
+    if max(abs(ab_line),abs(ac_line),abs(bc_line))==abs(bc_line):
+        point = a
+        top = cac_two_point(b,c)
+    elif max(abs(ab_line),abs(ac_line),abs(bc_line))==abs(ac_line):
+        point = b
+        top = cac_two_point(a, c)
+    else:
+        point = c
+        top = cac_two_point(a, b)
+
+    return point,top
+
+def cac_two_point(a,b):
+    # 谁纵坐标小选谁
+    if a[1]>b[1]:
+        point = b
+    else:
+        point = a
+    return point
