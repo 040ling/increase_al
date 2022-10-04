@@ -195,14 +195,16 @@ def filter_convex_contours(img,contours):
         if is_contour_rect(cont, point_A, point_B, 5):
             filtered.append(cont)
         else:
-            corners = cv2.goodFeaturesToTrack(img, 3, 0.1, 10)
+            line = np.zeros(img.shape, dtype=img.dtype)
+            cv2.line(line,point_A,point_B,(0xff, 0x0, 0xff), 4)
+            corners = cv2.goodFeaturesToTrack(line, 3, 0.1, 10)
             corners = np.int0(corners)
             list = []
             for i in corners:
                 x, y = i.ravel()
                 point = (x, y)
                 list.append(point)
-            cv2.imshow("img", img)
+            cv2.imshow("line", line)
             point, top = cac_cont_point(list[0], list[1], list[2], cont)
             bimg = np.zeros(img.shape, dtype=img.dtype)
             cv2.line(bimg, point, top, (0xff, 0x0, 0xff), 4)
