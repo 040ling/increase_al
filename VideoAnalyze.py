@@ -45,11 +45,15 @@ class VideoHits:
             hit_ = [hit.point,hit.score]
             print(hit_)
 
-    def add_hit(self,hit):
+    def add_hit(self,hit,tid,status,client):
         str = "本次命中环数：{}环".format(hit.score)
         PRINT(str)
-        time.sleep(0.5)
+        if status == 0:
+            client.publish("targetscore", json.dumps({"taskId": tid, "status": 0}))
+            status += 1
+        client.publish("targetscore", json.dumps({"taskId": tid, "status": 1, "score": hit.score}))
         self.hits_list.append(hit)
+        return status
 
     def final_pre(self,score):
         """

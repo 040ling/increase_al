@@ -102,50 +102,61 @@ class cam:
         self.point_a = pro.img_pts(model,self.frame_a,self.bullseye)
         self.point_b = pro.img_pts(model, self.frame_b, self.bullseye)
 
-    def cam_detect(self):
+    def cam_detect(self,t1,tid,status,client):
         ret, frame = self.cam.read()
 
         if not ret:
             self.cam_work = 0
             print('读取摄像头{}/文件夹视频失败'.format(self.num))
+            return 0,t1,status
 
         """"""
-
+        arch_num = self.video_hit.get_num()
         self.frame_c = frame
         #self.frame_a,self.frame_b=shipin.chulishipin(self.model,self.frame_a,self.frame_b,self.frame_c)
-        self.frame_a,self.frame_b,self.video_hit,self.point_a,self.point_b=ts.video_process(self.model,self.frame_a,self.frame_b,self.frame_c,self.video_hit,
-                                                                  self.bullseye,self.innerdist,self.num_target,self.point_a,self.point_b)
+        self.frame_a,self.frame_b,self.video_hit,self.point_a,self.point_b,status=ts.video_process(self.model,self.frame_a,self.frame_b,self.frame_c,self.video_hit,
+                                                                  self.bullseye,self.innerdist,self.num_target,self.point_a,self.point_b,t1,tid,status,client)
 
             #self.video_hit = va.VideoHits  # 重新初始化
+        arch_num_hou = self.video_hit.get_num()
+        if arch_num_hou - arch_num != 0:
+            t1 = time.time()
+            print("end 1 round")
+            return 0, t1,status
+        return 1,t1,status
 
 
-    def video_detect(self,i,t1):
+    def video_detect(self,i,t1,tid,status,client):
         ret, frame = self.cam.read()
+
 
         if not ret:
             self.cam_work = 0
             print('读取摄像头{}/文件夹视频失败'.format(self.num))
-            return 0,t1
+            return 0,t1,status
 
         if i != 15:
-            return 1,t1
+            return 1,t1,status
 
         arch_num = self.video_hit.get_num()
 
         self.frame_c = frame
         #self.frame_a,self.frame_b=shipin.chulishipin(self.model,self.frame_a,self.frame_b,self.frame_c)
-        self.frame_a,self.frame_b,self.video_hit,self.point_a,self.point_b=ts.video_process(self.model,self.frame_a,self.frame_b,self.frame_c,self.video_hit,
-                                                                  self.bullseye,self.innerdist,self.num_target,self.point_a,self.point_b,t1)
+        self.frame_a,self.frame_b,self.video_hit,self.point_a,self.point_b,status=ts.video_process(self.model,self.frame_a,self.frame_b,self.frame_c,self.video_hit,
+                                                                  self.bullseye,self.innerdist,self.num_target,self.point_a,self.point_b,t1,tid,status,client)
 
         arch_num_hou = self.video_hit.get_num()
         if arch_num_hou-arch_num!=0:
             t1 = time.time()
+            print("end 1 round")
+            return 0,t1,status
+
 
 
 
             #self.video_hit=va.VideoHits()  # 重新初始化
 
-        return 1,t1
+        return 1,t1,status
 
 
 

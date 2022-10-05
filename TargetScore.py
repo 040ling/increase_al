@@ -9,6 +9,7 @@ import VisualAnalyzer as visuals
 import ContourClassifier as cntr
 import VideoAnalyze as va
 import tool
+import json
 
 class Hit:
     def __init__(self,x,y,d,score,len,bullseye):
@@ -56,20 +57,20 @@ def create_scoreboard(hits,ringsAmount,innerDiam,model):
     model_w,model_h,_ = model.shape
     for hit in hits:
         if hit[1]<model_h/2:
-            score = 10 - int(hit[2] / innerDiam-0.05)
+            score = 11 - (hit[2] / innerDiam-0.05)
         else:
-            score = 10 - int(hit[2] / innerDiam - 0.2)
-        if score < 10 - ringsAmount + 1:
+            score = 11 - (hit[2] / innerDiam - 0.2)
+        if score < 0:
             score = 0
-        elif score > 10:
-            score = 10
+        elif score > 11:
+            score = 11
         hit_obj = Hit(hit[0],hit[1],hit[2],score,hit[4],hit[3])
         scoreboard.append(hit_obj)
         scoreboard.append(hit_obj)
     return scoreboard
 
 
-def compare_scoreboard(video_hit,scoreboard):
+def compare_scoreboard(video_hit,scoreboard,tid,status,client):
     if len(scoreboard) > 1:
         hit_choose = scoreboard[0]
         hit_d = video_hit.check_hit(hit_choose)
@@ -106,18 +107,22 @@ def compare_scoreboard(video_hit,scoreboard):
             if hit_rep<hit.reputation:
                 hit_rep = hit.reputation
                 hit_choose = hit
-        video_hit.add_hit(hit_choose)
-        return video_hit
+        status = video_hit.add_hit(hit_choose,tid,status,client)
+        return video_hit,status
     elif len(scoreboard) == 1:
-        video_hit.add_hit(scoreboard[0])
-        return video_hit
+        status = video_hit.add_hit(scoreboard[0],tid,status,client)
+        return video_hit,status
     else:
+        if status==0:
+            client.publish("targetscore", json.dumps({"taskId": tid, "status": 0}))
+            status += 1
+        client.publish("targetscore", json.dumps({"taskId": tid, "status": 1, "ringNum": 0.0}))
         tool.PRINT("未检测出箭头")
-        return video_hit
+        return video_hit,status
 
 
 
-def video_process(model,frame_a,frame_b,frame_c,video_hit,bullseye,innerdist,num_target,point_a,point_b,t1):
+def video_process(model,frame_a,frame_b,frame_c,video_hit,bullseye,innerdist,num_target,point_a,point_b,t1,tid,status,client):
     # 第一步，先求两个差值
     start =time.time()
     point_c = pro.img_pts(model,frame_c,bullseye)
@@ -158,12 +163,12 @@ def video_process(model,frame_a,frame_b,frame_c,video_hit,bullseye,innerdist,num
         print(0)
         end = time.time()
         print("日常时间：{}s".format(end-start))
-        return out1, out2, video_hit,point_b,point_c
+        return out1, out2, video_hit,point_b,point_c,status
     elif ((img_quanhei == line1).all() and (img_quanhei != line3).any())and(start-t1<5):
         out1 = frame_a
         out2 = frame_c
         print(1)
-        return out1, out2, video_hit,point_b,point_c
+        return out1, out2, video_hit,point_b,point_c,status
     elif ((img_quanhei == line1).all() and (img_quanhei != line3).any())and(start-t1>=5):
         out1 = frame_b
         out2 = frame_c
@@ -172,8 +177,9 @@ def video_process(model,frame_a,frame_b,frame_c,video_hit,bullseye,innerdist,num
         line1,radius = pro.img_end(img1,350,distances)
         if (img_quanhei == line1).all():
             print("fail")
-            return out1, out2, video_hit, point_b, point_c
+            return frame_a, frame_c, video_hit, point_b, point_c,status
         proj_contours = visuals.reproduce_proj_contours(line1, distances,
+
                                                         bullseye, radius, model)  # 边缘检测
         model_ = pic.copy()
         draw = cv2.drawContours(model_, proj_contours, -1, 127, 2)
@@ -183,15 +189,18 @@ def video_process(model,frame_a,frame_b,frame_c,video_hit,bullseye,innerdist,num
 
         hits = find_real_hit(proj_contours)
         scoreboard = create_scoreboard(hits, num_target, innerdist, model)
-        video_hit = compare_scoreboard(video_hit, scoreboard)
+        video_hit,status = compare_scoreboard(video_hit, scoreboard,tid,status,client)
         end = time.time()
         print("关键帧判别时长：{}s".format(end - start))
-        return out1, out2, video_hit,point_b,point_c
+        return out1, out2, video_hit,point_b,point_c,status
     elif (img_quanhei != line1).any() and (img_quanhei != line2).any():
         out1 = frame_a
         out2 = frame_c
         print(2)
-        return out1, out2, video_hit,point_b,point_c
+        if status==0:
+            client.publish("targetscore", json.dumps({"taskId": tid, "status": 0}))
+            status +=1
+        return out1, out2, video_hit,point_b,point_c,status
     elif (img_quanhei != line1).any() and (img_quanhei == line2).all():
         out1 = frame_b
         out2 = frame_c
@@ -207,16 +216,16 @@ def video_process(model,frame_a,frame_b,frame_c,video_hit,bullseye,innerdist,num
 
         hits = find_real_hit(proj_contours)
         scoreboard = create_scoreboard(hits,num_target,innerdist,model)
-        video_hit = compare_scoreboard(video_hit,scoreboard)
+        video_hit,status = compare_scoreboard(video_hit,scoreboard,tid,status,client)
         end = time.time()
         print("关键帧判别时长：{}s".format(end-start))
-        return out1,out2,video_hit,point_b,point_c
+        return out1,out2,video_hit,point_b,point_c,status
 
     else:
         out1 = frame_b
         out2 = frame_c
         print(4)
-        return out1, out2, video_hit,point_b,point_c
+        return out1, out2, video_hit,point_b,point_c,status
 
 
 

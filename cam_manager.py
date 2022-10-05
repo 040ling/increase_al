@@ -6,6 +6,25 @@ import threading
 import time
 import camcontrol as CAM
 import cv2
+import json
+def on_connect(client,userdata,flags,rc):
+    print("连接成功")
+    client.subscribe("test")
+    camera.start_init(0, DisplayMode, path, save_path, model, bullseye, innerdist, num_target)
+
+def on_message(client,userdata,msg):
+    payload = json.loads(msg.payload.decode())
+    print("收到比赛ID："+payload.get("taskId"))
+    tid = payload.get("taskId")
+    camera.start(tid,client)
+
+
+
+
+
+
+
+
 
 class CameraManager(object):
     def __init__(self, DisplayMode,cam_num=1):
@@ -39,14 +58,14 @@ class CameraManager(object):
                 self.cam_list[idx] = CAM.cam(idx, DisplayMode, path, save_path, model, bullseye, innerdist, num_target)
         return self
 
-    def start(self):
+    def start(self,tid,client):
         if self.DisplayMode:
             for idx in range(self.cam_num):
-                framethread = threading.Thread(target=self.worker2, args=(self.cam_list[idx],idx))
+                framethread = threading.Thread(target=self.worker2, args=(self.cam_list[idx],tid,client))
                 self.framethread[idx] = framethread
         else:
             for idx in range(self.cam_num):
-                framethread = threading.Thread(target=self.worker, args=(self.cam_list[idx],idx))
+                framethread = threading.Thread(target=self.worker, args=(self.cam_list[idx],tid,client))
                 self.framethread[idx] = framethread
         for idx in range(self.cam_num):
             self.framethread[idx].start()
@@ -54,19 +73,25 @@ class CameraManager(object):
 
 
 
-    def worker(self, ele,i):
+    def worker(self, ele,tid,client):
         print('3214')
+        status = 0
+        t1 = time.time()
         while self._isWorking:
             start = time.time()
             # try:
-            ele.cam_detect()
+            normal,t1,status = ele.cam_detect(t1,tid,status,client)
+            if not normal:
+                tool.PRINT("识别完成")
+                break
             while time.time() - start < 0.08:
                 time.sleep(0.001)
 
-    def worker2(self, ele,i):
+    def worker2(self, ele,tid,client):
         print('12374')
         idx = 0
         t1 = time.time()
+        status = 0
         while self._isWorking:
             start = time.time()
             # try:
@@ -74,7 +99,7 @@ class CameraManager(object):
                 idx = 0
             else:
                 idx += 1
-            normal,t1 = ele.video_detect(idx,t1)
+            normal,t1 = ele.video_detect(idx,t1,tid,status,client)
 
             if not normal:
                 tool.PRINT("识别完成")
@@ -105,8 +130,7 @@ if __name__ == "__main__":
 
     #video = cv2.VideoCapture(0)
     camera = CameraManager(DisplayMode)
-    camera.start_init(0,DisplayMode,path,save_path,model,bullseye,innerdist,num_target)
-    camera.start()
+
     """
     while True:
         frame = camera.getFrame()
