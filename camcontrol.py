@@ -111,6 +111,7 @@ class cam:
             return 0,t1,status
 
         """"""
+
         arch_num = self.video_hit.get_num()
         self.frame_c = frame
         #self.frame_a,self.frame_b=shipin.chulishipin(self.model,self.frame_a,self.frame_b,self.frame_c)

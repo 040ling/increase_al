@@ -7,6 +7,8 @@ import time
 import camcontrol as CAM
 import cv2
 import json
+import paho.mqtt.client as mqtt
+
 def on_connect(client,userdata,flags,rc):
     print("连接成功")
     client.subscribe("test")
@@ -80,6 +82,9 @@ class CameraManager(object):
         while self._isWorking:
             start = time.time()
             # try:
+            if (start-t1)>19.5:
+                tool.PRINT("未检测到箭")
+                break
             normal,t1,status = ele.cam_detect(t1,tid,status,client)
             if not normal:
                 tool.PRINT("识别完成")
@@ -99,7 +104,7 @@ class CameraManager(object):
                 idx = 0
             else:
                 idx += 1
-            normal,t1 = ele.video_detect(idx,t1,tid,status,client)
+            normal,t1,status = ele.video_detect(idx,t1,tid,status,client)
 
             if not normal:
                 tool.PRINT("识别完成")
@@ -130,6 +135,16 @@ if __name__ == "__main__":
 
     #video = cv2.VideoCapture(0)
     camera = CameraManager(DisplayMode)
+    TASK_TOPIC = 'test'
+    client_id = time.strftime('%Y%m%d%H%M%S', time.localtime(time.time()))
+
+    client = mqtt.Client(client_id, transport='tcp')
+    client.connect("127.0.0.1", 1883)
+
+    client.on_connect = on_connect
+    client.on_message = on_message
+
+    client.loop_forever()
 
     """
     while True:
